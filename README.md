@@ -82,6 +82,43 @@ On the Live and Sermons pages, a floating "Notes" button appears bottom-right
 header) and resized (drag the bottom-right corner). It auto-saves to that
 browser only, with a download-as-text button.
 
+## Automatic live detection (optional)
+Once set up, the site notices the moment you go live on YouTube and shows
+the stream automatically — no need to remember to flip a switch.
+
+1. In Google Cloud Console, create a project (or use an existing one),
+   enable the **YouTube Data API v3**, and create an **API key**.
+2. Find your channel ID (Studio → Settings → Channel → Advanced settings,
+   or view any of your channel pages and check the URL — it starts with
+   `UC`).
+3. Open the HTML file, find `YOUTUBE_API_KEY` and `YOUTUBE_CHANNEL_ID` near
+   the top of the `<script>` section, and paste both in.
+
+**Why this only runs for signed-in admins, not every visitor:** YouTube's
+API has a daily quota, and checking "are we live" costs 100 units per
+check out of a free 10,000/day. If every visitor's browser checked on its
+own, a single well-attended service could burn through that in minutes. So
+instead, only an admin's signed-in dashboard session checks (every 3
+minutes by default — see `YOUTUBE_POLL_INTERVAL_MS`), and writes the result
+to Supabase; every visitor just reads that shared result instantly, with
+zero API calls of their own. Rough math: one admin dashboard open for a
+2-hour service ≈ 40 checks ≈ 4,000 units — comfortably inside the free
+quota. If several staff keep dashboards open at once, or services run
+long, you can raise `YOUTUBE_POLL_INTERVAL_MS` (in milliseconds) or request
+a quota increase from Google (usually approved quickly, free).
+
+You'll see a small "Auto-detect" status line in the dashboard's Settings →
+Live Stream panel once it's configured. The manual "We are live right now"
+checkbox still works too, as a manual override.
+
+## Gallery photos and videos
+The dashboard's Gallery tab now accepts both photos and videos in the same
+upload — just pick any mix of image/video files. Thumbnails in the grid
+show the same grayscale-until-hover treatment either way (with a small
+play icon marking videos), but opening a video full-size shows it in its
+real, original color with playback controls — only the thumbnail grid
+stays monochrome.
+
 ## Pastor's Blog
 A new "Blog" page and nav link, fully editable from the dashboard's
 **Pastor's Blog** tab: title, author, the pastor's photo, an optional cover
@@ -96,17 +133,28 @@ missing gets created), so this also works as your general "pull in the
 latest schema" step any time it changes going forward.
 
 ## 3D logo on the homepage
-The homepage hero now shows your actual logo as an interactive, drag-to-
-rotate 3D model (auto-rotates gently when idle, pauses while you drag it)
-instead of the placeholder sunburst mark. Your `.glb` file is embedded
-directly in the HTML itself — nothing to host separately, nothing to
-configure. If you ever want to swap in a different model, search the file
-for `LOGO_MODEL_BASE64` and either paste in a new base64-encoded `.glb`, or
-send me the file again and I'll do it for you.
+The homepage hero shows your actual logo as an interactive, drag-to-rotate
+3D model (auto-rotates gently when idle, pauses while you drag it) instead
+of the placeholder sunburst mark.
 
-If it's ever unreachable (e.g. a browser with WebGL disabled), it falls back
-automatically to your logo image, then to the sunburst mark — never a
-blank or broken hero.
+**File layout:** the model ships as its own file at `models/ROG_3D_Logo.glb`,
+right alongside the HTML file — keep that folder structure when you deploy
+(upload both the HTML file and the `models` folder together). The code
+points at it via `LOGO_MODEL_URL` near the top of the `<script>` section; if
+you ever swap in a different model, either replace that file (keeping the
+same name) or update `LOGO_MODEL_URL` to point at the new filename.
+
+**Testing it locally:** because the model now loads as a separate file
+rather than being baked into the HTML, opening the HTML file by double-
+clicking it won't load the model (browsers block that kind of local file
+loading for security reasons) — you'll just see the fallback logo, which is
+expected. To actually see the 3D model while testing, either run a quick
+local server from that folder (e.g. `npx serve`, or VS Code's "Live Server"
+extension, or `python3 -m http.server`) and open it through that, or just
+deploy it — it works perfectly once it's on Vercel or any real host.
+
+If it's ever unreachable there too, it falls back automatically to your
+logo image, then to the sunburst mark — never a blank or broken hero.
 
 ## Design notes
 Monochrome, grayscale palette throughout (photos are auto-grayscaled via

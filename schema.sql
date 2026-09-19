@@ -32,8 +32,11 @@ create table if not exists gallery (
   caption text,
   asset_path text,
   asset_url text,
+  type text not null default 'image', -- 'image' or 'video'
   created_at timestamptz not null default now()
 );
+-- For projects that already had this table before "type" existed:
+alter table gallery add column if not exists type text not null default 'image';
 
 create table if not exists events (
   id uuid primary key default gen_random_uuid(),
