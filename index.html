@@ -155,6 +155,53 @@
       }
     }
 
+    /* ---------- Motion / Animations ---------- */
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes heroIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes scaleIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+    @keyframes pageFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes radiantSpin{to{transform:rotate(360deg)}}
+
+    #app.page-enter{animation:pageFade .5s var(--ease)}
+
+    .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+    .reveal.is-visible{opacity:1;transform:translateY(0)}
+
+    .hero-eyebrow,.hero h1,.hero .lede,.hero-ctas{opacity:0;animation:heroIn .7s var(--ease) forwards}
+    .hero-eyebrow{animation-delay:.05s}
+    .hero h1{animation-delay:.16s}
+    .hero .lede{animation-delay:.3s}
+    .hero-ctas{animation-delay:.42s}
+    .hero-visual{opacity:0;animation:heroIn .9s var(--ease) forwards;animation-delay:.22s}
+    .hero-visual .radiant{animation:radiantSpin 50s linear infinite}
+    .scripture-band .radiant{animation:radiantSpin 80s linear infinite}
+
+    .nav{transition:box-shadow .3s var(--ease)}
+    .nav.scrolled{box-shadow:0 10px 30px -20px rgba(19,18,16,.4)}
+
+    .btn:hover{transform:translateY(-2px)}
+    .btn:active{transform:translateY(0);transition-duration:.08s}
+
+    .card,.leader-card{transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+    .card:hover,.leader-card:hover{transform:translateY(-5px);box-shadow:0 16px 34px -22px rgba(19,18,16,.4)}
+
+    .value-card .icon{transition:transform .35s var(--ease)}
+    .value-card:hover .icon{transform:scale(1.12) rotate(-4deg)}
+
+    .meeting-icon{transition:transform .3s var(--ease),border-color .3s var(--ease)}
+    .meeting-card:hover .meeting-icon{transform:scale(1.08);border-color:var(--ink)}
+
+    .sermon-row{transition:background-color .25s var(--ease)}
+    .sermon-row:hover{background:var(--paper-raised)}
+    .sermon-play:hover{transform:scale(1.08)}
+    .sermon-player{animation:fadeUp .4s var(--ease)}
+
+    .lightbox.open{animation:fadeIn .3s var(--ease)}
+    .lightbox.open img{animation:scaleIn .4s var(--ease)}
+    .modal-overlay.open{animation:fadeIn .25s var(--ease)}
+    .modal-overlay.open .modal-box{animation:fadeUp .3s var(--ease)}
+
     .wrap {
       max-width: var(--maxw);
       margin: 0 auto;
@@ -264,14 +311,22 @@
       color: var(--ink)
     }
 
-    .nav-links a.active::after {
+    .nav-links a::after {
       content: '';
       position: absolute;
       left: 0;
       right: 0;
       bottom: -2px;
       height: 1px;
-      background: var(--ink)
+      background: var(--ink);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .3s var(--ease)
+    }
+
+    .nav-links a:hover::after,
+    .nav-links a.active::after {
+      transform: scaleX(1)
     }
 
     .nav-cta {
@@ -2874,6 +2929,7 @@
       app.innerHTML = html;
       document.getElementById('app').classList.remove('dash');
       window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+      app.classList.remove('page-enter'); void app.offsetWidth; app.classList.add('page-enter');
       afterRouteRender(name);
     }
     function page404() {
@@ -3856,6 +3912,35 @@
       if (dock) dock.style.display = (name === 'live' || name === 'sermons') ? 'flex' : 'none';
       disposeHeroModelViewer();
       if (name === 'home') initHeroModelViewer();
+      initReveals();
+    }
+
+    /* ---------- scroll-reveal for section content on public pages ---------- */
+    let REVEAL_OBSERVER = null;
+    function initReveals() {
+      const targets = document.querySelectorAll(
+        '#app .value-card, #app .leader-card, #app .meeting-card, #app .sermon-row, #app .gal-thumb, ' +
+        '#app .card, #app .event-row, #app .scripture-inner, #app .strip-item, #app .give-method, #app .contact-item, ' +
+        '#app .grid-2 > *, #app .grid-3 > *, #app .grid-4 > *, #app .grid-5 > *'
+      );
+      if (!('IntersectionObserver' in window)) {
+        targets.forEach(el => el.classList.add('reveal', 'is-visible'));
+        return;
+      }
+      if (REVEAL_OBSERVER) REVEAL_OBSERVER.disconnect();
+      REVEAL_OBSERVER = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            REVEAL_OBSERVER.unobserve(entry.target);
+          }
+        });
+      }, { threshold: .12, rootMargin: '0px 0px -40px 0px' });
+      targets.forEach((el, i) => {
+        el.classList.add('reveal');
+        el.style.transitionDelay = (i % 6) * 70 + 'ms';
+        REVEAL_OBSERVER.observe(el);
+      });
     }
 
     /* ============================ Study Tools: Notes ============================ */
@@ -4496,6 +4581,10 @@
       makeDraggable('notesPanel', 'notesPanelHead');
       loadNotes();
     });
+    window.addEventListener('scroll', () => {
+      const navEl = document.querySelector('.nav');
+      if (navEl) navEl.classList.toggle('scrolled', window.scrollY > 16);
+    }, { passive: true });
   </script>
 </body>
 
