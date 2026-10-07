@@ -184,7 +184,7 @@
     .btn:active{transform:translateY(0);transition-duration:.08s}
 
     .card,.leader-card{transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
-    .card:hover,.leader-card:hover{transform:translateY(-5px);box-shadow:0 16px 34px -22px rgba(19,18,16,.4)}
+    .card:hover{transform:translateY(-5px);box-shadow:0 16px 34px -22px rgba(19,18,16,.4)}
 
     .value-card .icon{transition:transform .35s var(--ease)}
     .value-card:hover .icon{transform:scale(1.12) rotate(-4deg)}
@@ -1171,7 +1171,7 @@
       max-width: min(92vw, 1100px);
       max-height: 74vh;
       object-fit: contain;
-      filter: grayscale(1) contrast(1.06)
+      filter: none
     }
 
     .lightbox-cap {
@@ -2255,6 +2255,21 @@
       <circle cx="4.5" cy="12" r="1" />
       <circle cx="4.5" cy="18" r="1" />
     </symbol>
+    <symbol id="i-instagram" viewBox="0 0 24 24">
+      <rect x="2" y="2" width="20" height="20" rx="5" />
+      <circle cx="12" cy="12" r="4.2" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </symbol>
+    <symbol id="i-facebook" viewBox="0 0 24 24">
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </symbol>
+    <symbol id="i-youtube" viewBox="0 0 24 24">
+      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
+      <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+    </symbol>
+    <symbol id="i-tiktok" viewBox="0 0 24 24">
+      <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+    </symbol>
   </svg>
 
   <!-- ============ NAV ============ -->
@@ -2453,10 +2468,10 @@
         heroSub: "Realm of Glory Surulere exists to honor God and to make disciples — building transformed lives for a transformed society, since 2018.",
         vision: "We are a people of praise, prayer and sacrifice — and we exist to honor God and to make disciples.",
         mission: "We believe in the transformation and discipleship of every believer through establishing strong biblical foundations. \u201cTransformed Life, Transformed Society.\u201d",
-        address: "Realm of Glory Surulere, Surulere, Lagos, Nigeria",
-        phone: "+234 800 000 0000",
-        email: "hello@realmofglorysurulere.org",
-        mapQuery: "Realm of Glory Surulere, Surulere, Lagos, Nigeria",
+        address: "147B Ogunlana Drive, Surulere, Lagos, Nigeria",
+        phone: "+234 813 551 6712",
+        email: "realmsurulere@gmail.com",
+        mapQuery: "147B Ogunlana Drive, Surulere, Lagos, Nigeria",
         serviceLabel: "Sunday Service",
         serviceTime: "8:00 AM",
         instagram: "", facebook: "", youtube: "", tiktok: "",
@@ -2582,6 +2597,7 @@
       return 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent(subject || '');
     }
     function gmapsLink(q) { return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q || ''); }
+    function gmapsEmbedSrc(q) { return 'https://www.google.com/maps?q=' + encodeURIComponent(q || '') + '&output=embed'; }
 
     /* ------------------------------- theme toggle ----------------------------- */
     function getStoredTheme() { try { return localStorage.getItem('rogTheme'); } catch (e) { return null; } }
@@ -2898,10 +2914,10 @@
       const fe = document.getElementById('footEmail'); fe.textContent = s.email; fe.href = mailtoLink(s.email);
       document.getElementById('footCopy').textContent = '\u00A9 ' + new Date().getFullYear() + ' ' + s.churchName + '. Founded ' + s.founded + '.';
       const socials = [
-        s.instagram && { href: s.instagram, ic: 'i-camera', label: 'Instagram' },
-        s.facebook && { href: s.facebook, ic: 'i-message', label: 'Facebook' },
-        s.youtube && { href: s.youtube, ic: 'i-play-circle', label: 'YouTube' },
-        s.tiktok && { href: s.tiktok, ic: 'i-music', label: 'TikTok' }
+        s.instagram && { href: s.instagram, ic: 'i-instagram', label: 'Instagram' },
+        s.facebook && { href: s.facebook, ic: 'i-facebook', label: 'Facebook' },
+        s.youtube && { href: s.youtube, ic: 'i-youtube', label: 'YouTube' },
+        s.tiktok && { href: s.tiktok, ic: 'i-tiktok', label: 'TikTok' }
       ].filter(Boolean);
       document.getElementById('footSocials').innerHTML = socials.map(x =>
         '<a href="' + esc(x.href) + '" target="_blank" rel="noopener" aria-label="' + x.label + '">' + icon(x.ic, 'icon-sm') + '</a>'
@@ -3793,9 +3809,24 @@
     }
 
     /* -------------------------------- GALLERY ------------------------------------ */
+    const GALLERY_UI = { query: "", focusedKey: null };
+    const GALLERY_PREVIEW_COUNT = 12;
+    function filteredGallery() {
+      return STATE.gallery.filter(g => {
+        if (GALLERY_UI.query) {
+          const q = GALLERY_UI.query.toLowerCase();
+          const hay = [g.caption, fmtDate(g.serviceDate, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })].filter(Boolean).join(' ').toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      }).sort((a, b) => (b.serviceDate || '').localeCompare(a.serviceDate || ''));
+    }
     function pageGallery() {
-      const groups = groupBy(STATE.gallery.slice().sort((a, b) => (b.serviceDate || '').localeCompare(a.serviceDate || '')), g => g.serviceDate || 'Undated');
+      const list = filteredGallery();
+      const groups = groupBy(list, g => g.serviceDate || 'Undated');
       const keys = Array.from(groups.keys());
+      if (GALLERY_UI.focusedKey && !keys.includes(GALLERY_UI.focusedKey)) GALLERY_UI.focusedKey = null;
+      const visibleKeys = GALLERY_UI.focusedKey ? keys.filter(k => k === GALLERY_UI.focusedKey) : keys;
       return `
   <section class="section" style="padding-top:clamp(4rem,9vw,6rem)"><div class="wrap">
     <div class="hero-eyebrow">${icon('i-image', 'icon-sm')}<span>Gallery</span></div>
@@ -3803,21 +3834,41 @@
     <p class="lede" style="margin-top:1.5rem">A look back at our Sunday services and gatherings, organized by date.</p>
   </div></section>
   <section class="wrap" style="padding-bottom:5rem">
-    ${!keys.length ? `<div class="empty-state">${icon('i-image', 'icon-lg')}<p><strong>No photos yet.</strong><br>Sunday photos will appear here once they\u2019re added.</p></div>` :
-          keys.map(k => {
-            const items = groups.get(k);
-            return `<div class="gal-group">
-          <div class="sermon-group-title"><h3>${k === 'Undated' ? 'Undated' : fmtDate(k, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h3><div class="rule"></div></div>
-          <div class="gal-grid">${items.map((g, i) => `<div class="gal-thumb" onclick='openGalleryGroup(${JSON.stringify(k)}, ${i})'>${g.type === 'video'
-              ? `<video src="${esc(g.assetUrl)}" muted playsinline preload="metadata"></video><span class="gal-video-badge">${icon('i-play', 'icon-sm')}</span>`
-              : `<img src="${esc(g.assetUrl)}" alt="${esc(g.caption || '')}" loading="lazy">`}</div>`).join('')}</div>
+    <div class="filter-bar">
+      <input id="gallerySearchInput" type="search" placeholder="Search by date or caption" value="${esc(GALLERY_UI.query)}" oninput="onGallerySearchInput(this)">
+      ${GALLERY_UI.focusedKey ? `<button class="btn btn-outline" onclick='toggleGalleryGroup(${JSON.stringify(GALLERY_UI.focusedKey)})' style="margin-left:auto">${icon('i-chevron-left', 'icon-sm')} All Sundays</button>` : ''}
+    </div>
+    ${!STATE.gallery.length ? `<div class="empty-state">${icon('i-image', 'icon-lg')}<p><strong>No photos yet.</strong><br>Sunday photos will appear here once they\u2019re added.</p></div>` :
+          !keys.length ? `<div class="empty-state">${icon('i-image', 'icon-lg')}<p><strong>No photos match yet.</strong><br>Try a different search.</p></div>` :
+            visibleKeys.map(k => {
+              const items = groups.get(k);
+              const focused = GALLERY_UI.focusedKey === k;
+              const visible = focused ? items : items.slice(0, GALLERY_PREVIEW_COUNT);
+              return `<div class="gal-group">
+          <div class="sermon-group-title"><h3>${k === 'Undated' ? 'Undated' : fmtDate(k, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h3><div class="rule"></div><span style="color:var(--ink-45);font-size:.85rem">${items.length} photo${items.length === 1 ? '' : 's'}</span></div>
+          <div class="gal-grid">${visible.map(g => `<div class="gal-thumb" onclick='openGalleryGroup(${JSON.stringify(k)}, ${JSON.stringify(g.id)})'>${g.type === 'video'
+                  ? `<video src="${esc(g.assetUrl)}" muted playsinline preload="metadata"></video><span class="gal-video-badge">${icon('i-play', 'icon-sm')}</span>`
+                  : `<img src="${esc(g.assetUrl)}" alt="${esc(g.caption || '')}" loading="lazy">`}</div>`).join('')}</div>
+          ${items.length > GALLERY_PREVIEW_COUNT ? `<div style="text-align:center;margin-top:1.5rem"><button class="btn btn-outline" onclick='toggleGalleryGroup(${JSON.stringify(k)})'>${focused ? 'Show less' : `Show all ${items.length} photos`}</button></div>` : ''}
         </div>`;
-          }).join('')}
+            }).join('')}
   </section>
   `;
     }
-    function openGalleryGroup(key, idx) {
+    function toggleGalleryGroup(key) {
+      GALLERY_UI.focusedKey = GALLERY_UI.focusedKey === key ? null : key;
+      renderRoute();
+    }
+    function onGallerySearchInput(el) {
+      const pos = el.selectionStart;
+      GALLERY_UI.query = el.value;
+      renderRoute();
+      const el2 = document.getElementById('gallerySearchInput');
+      if (el2) { el2.focus(); try { el2.setSelectionRange(pos, pos); } catch (e) { } }
+    }
+    function openGalleryGroup(key, id) {
       const items = STATE.gallery.filter(g => (g.serviceDate || 'Undated') === key).sort((a, b) => (b.serviceDate || '').localeCompare(a.serviceDate || ''));
+      const idx = Math.max(0, items.findIndex(g => g.id === id));
       openLightbox(items.map(g => ({ url: g.assetUrl, caption: g.caption, serviceDate: g.serviceDate, type: g.type || 'image' })), idx);
     }
 
@@ -3838,7 +3889,7 @@
       <div class="contact-item">${icon('i-phone', 'icon-lg')}<div><b>Phone</b><a href="tel:${esc((s.phone || '').replace(/\s/g, ''))}">${esc(s.phone)}</a></div></div>
       <div class="contact-item">${icon('i-mail', 'icon-lg')}<div><b>Email</b><a href="${mailtoLink(s.email)}">${esc(s.email)}</a></div></div>
       <div class="contact-item">${icon('i-clock', 'icon-lg')}<div><b>${esc(s.serviceLabel)}</b><span>${esc(s.serviceTime)}, weekly</span></div></div>
-      <div class="map-graphic" style="margin-top:1.5rem">${mapGraphicSVG()}</div>
+      <div class="map-graphic" style="margin-top:1.5rem"><iframe src="${gmapsEmbedSrc(s.mapQuery)}" width="100%" height="100%" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Map to ${esc(s.address)}"></iframe></div>
     </div>
 
     <div>
@@ -3850,15 +3901,6 @@
     </div>
   </div></section>
   `;
-    }
-    function mapGraphicSVG() {
-      return `<svg viewBox="0 0 400 300" width="100%" height="100%" preserveAspectRatio="none" style="color:var(--ink-25)">
-    <g stroke="currentColor" stroke-width="1" fill="none" opacity=".6">
-      <path d="M0 60 H400 M0 130 H400 M0 210 H400"/><path d="M70 0 V300 M180 0 V300 M300 0 V300"/>
-    </g>
-    <circle cx="200" cy="140" r="6" fill="var(--ink)" stroke="none"/>
-    <path d="M200 140 c0 -22 34 -22 34 0 c0 18 -34 40 -34 52 c0 -12 -34 -34 -34 -52 c0 -22 34 -22 34 0z" fill="none" stroke="var(--ink)" stroke-width="1.5" transform="translate(0,-46)"/>
-  </svg>`;
     }
     function contactFormHTML() {
       if (CONTACT_UI.sentContact) {
